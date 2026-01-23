@@ -101,6 +101,19 @@
 
             switch(scriptType) {
                 case 'IndesignScript':
+// --- Fix broken CP1252/C1 control junk (must run BEFORE entity fixes) ---
+textString = textString
+  .replace(/f/g, '’')   // TagEnergyfs -> TagEnergy’s
+  .replace(/e/g, '‘')   // opening single quote
+  .replace(/g/g, '“')   // opening double quote
+  .replace(/h/g, '”')   // closing double quote
+  .replace(/c/g, ',')   // stray “comma” marker seen in your text
+  .replace(/\\/g, '—'); // em dash marker (backslash after the control char)
+
+// Safety: remove any remaining C1 control chars (U+0080–U+009F)
+textString = textString.replace(/[\u0080-\u009F]/g, '');
+
+                    
 const fixes = {
   '&apos;': "'",
   '&quot;': '"',
@@ -162,6 +175,7 @@ for (const [bad, good] of Object.entries(fixes)) {
                     textString = textString.replace(/^[\s\S]*?<Root>/, `<!DOCTYPE html>\n<html>\n  <head>\n    <title>${scriptName}</title>\n  </head>\n  <body>`);
                     textString = textString.replace(/<category(.+)><\/p>/g, '</p>\n      </div>\n       <div class="category">\n       <p>$1</p>');
                     textString = textString.replace(/^\s*[\r\n]/gm, '');  // Remove single blank lines
+                    textString = textString.replace(/<\/p>\s*<\/p>/g, '</p>');
                     break;
             }
 
